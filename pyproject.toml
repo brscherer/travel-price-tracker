@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "travel-price-tracker"
+version = "0.1.0"
+description = "Personal flight-deal tracker for departures from Porto Alegre (POA)"
+requires-python = ">=3.12"
+dependencies = [
+    "requests>=2.31",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "pydantic>=2.6",
+    "tenacity>=8.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "freezegun>=1.4",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/travel_tracker"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

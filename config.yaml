@@ -1,0 +1,62 @@
+timezone: America/Sao_Paulo
+currency: BRL
+
+watchlist:
+  - origin: POA
+    destination: LIS
+    date_window:
+      start: "2026-11-01"
+      end: "2027-03-31"
+    trip_length_days: [7, 14]
+    cabin: economy
+    max_price_brl: 4500
+  - origin: POA
+    destination: MIA
+    date_window:
+      start: "2026-11-01"
+      end: "2027-03-31"
+    trip_length_days: [7, 14]
+    cabin: economy
+    max_price_brl: 3500
+  - origin: POA
+    destination: GRU
+    date_window:
+      start: "2026-10-01"
+      end: "2027-03-31"
+    trip_length_days: [3, 7]
+    cabin: economy
+    max_price_brl: 600
+  - origin: POA
+    destination: EZE
+    date_window:
+      start: "2026-10-01"
+      end: "2027-03-31"
+    trip_length_days: [4, 10]
+    cabin: economy
+    max_price_brl: 1800
+  - origin: POA
+    destination: CDG
+    date_window:
+      start: "2026-11-01"
+      end: "2027-03-31"
+    trip_length_days: [10, 20]
+    cabin: economy
+    max_price_brl: 5500
+
+deal_detection:
+  min_snapshots_for_median: 10
+  rolling_window_days: 60
+  hot_deal_discount_pct: 25
+  error_fare_discount_pct: 50
+
+scan:
+  cadence_hours: 6
+
+# Phase 3: award/miles programs (Smiles, LATAM Pass, Azul Fidelidade) and
+# transfer-bonus tracking (Livelo, Esfera) go here.
+miles_programs: []
+
+alerts:
+  telegram_enabled: true
+  daily_summary: true
+  daily_summary_time: "08:00"
