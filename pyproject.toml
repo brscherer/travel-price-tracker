@@ -20,9 +20,14 @@ dependencies = [
 dev = [
     "pytest>=8.0",
     "freezegun>=1.4",
+    "pandas>=2.2",
 ]
 telegram = [
     "telethon>=1.36",
+]
+dashboard = [
+    "streamlit>=1.35",
+    "pandas>=2.2",
 ]
 
 [tool.hatch.build.targets.wheel]

@@ -9,6 +9,8 @@ Personal flight-deal tracker for departures from Porto Alegre (POA).
 - **Phase 3**: promo feeds (RSS + optional Telegram channel monitoring),
   transfer-bonus and miles-sale detection. Award/miles availability tracking
   (seats.aero) is deferred -- see below.
+- **Phase 4**: local Streamlit dashboard -- price charts per route, today's
+  deals, active promos.
 
 ## Setup
 
@@ -107,6 +109,29 @@ Channel monitoring needs that local session file, so it's local-cron-only
 for now; it isn't wired into the GitHub Actions workflows (would need a
 `StringSession` stored as a secret instead -- a follow-up if useful).
 
+## Dashboard
+
+```bash
+pip install -e ".[dashboard]"
+python -m travel_tracker dashboard
+```
+
+Opens a local Streamlit app (`http://localhost:8501`) reading the same
+SQLite database the scans write to -- no separate data layer. Three tabs:
+
+- **Today's deals** -- `alerts_sent` from the last 24h (hot deals, error
+  fares, target-price hits), joined with route info.
+- **Price charts** -- pick any route that's ever been scanned (watchlist or
+  wide-scan-discovered), a line chart of daily minimum cached price over a
+  configurable window, plus the raw snapshot table underneath.
+- **Active promos** -- `promo_alerts_sent` from the last 48h (transfer
+  bonuses, miles sales, general promos), with title/link when available.
+
+Runs read-only against the DB; nothing here writes data. Equivalent to
+`streamlit run src/travel_tracker/dashboard/app.py` if you'd rather invoke
+Streamlit directly. A `.claude/launch.json` entry is included for previewing
+it via Claude Code's browser tooling.
+
 ## Tests
 
 ```bash
@@ -119,6 +144,9 @@ pytest
 - `test_promo_filters.py` -- transfer-bonus/miles-sale/keyword text matching
 - `test_rss_parse.py` -- RSS feed parsing
 - `test_promo_pipeline.py` -- promo classify/dedup/alert flow
+- `test_dashboard_data.py` -- dashboard query functions (routes, price
+  history, recent deals/promos, including the NULL-vs-empty-string case for
+  pre-Phase-4 promo rows)
 - `test_dedup.py`, `test_db.py` -- alert dedup and SQLite helpers
 
 ## Scheduling
@@ -162,4 +190,6 @@ later if that matters.
   interface (`providers/base.py`) makes this a self-contained addition
   whenever that's decided; `miles_programs` in `config.yaml` is a placeholder
   until then.
-- Dashboard is Phase 4.
+- The dashboard is read-only and local (`localhost:8501` by default, not
+  exposed publicly) -- no auth, since it's a personal single-user tool. Don't
+  bind it to a public interface without adding some.

@@ -42,5 +42,7 @@ CREATE TABLE IF NOT EXISTS promo_alerts_sent (
     item_id TEXT NOT NULL,
     alert_type TEXT NOT NULL,
     sent_at TEXT NOT NULL,
+    title TEXT,
+    link TEXT,
     UNIQUE(source, item_id)
 );

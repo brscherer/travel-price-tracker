@@ -10,11 +10,29 @@ _SCHEMA_PATH = Path(__file__).parent / "schema.sql"
 
 def connect(db_path: str) -> sqlite3.Connection:
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(db_path)
+    # check_same_thread=False: Streamlit can rerun a script on a different
+    # thread than the one that created a cached (st.cache_resource)
+    # connection. Access here is still sequential (one script run at a
+    # time per session), never truly concurrent, so this is safe.
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.executescript(_SCHEMA_PATH.read_text(encoding="utf-8"))
+    _migrate(conn)
     return conn
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Idempotent column additions for tables that already existed before
+    the column was introduced -- `CREATE TABLE IF NOT EXISTS` in schema.sql
+    doesn't touch a table that's already there.
+    """
+    existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(promo_alerts_sent)")}
+    if "title" not in existing_cols:
+        conn.execute("ALTER TABLE promo_alerts_sent ADD COLUMN title TEXT")
+    if "link" not in existing_cols:
+        conn.execute("ALTER TABLE promo_alerts_sent ADD COLUMN link TEXT")
+    conn.commit()
 
 
 def get_or_create_route(conn: sqlite3.Connection, origin: str, destination: str, cabin: str) -> int:
@@ -122,12 +140,20 @@ def promo_already_alerted(conn: sqlite3.Connection, source: str, item_id: str) -
     return row is not None
 
 
-def record_promo_alert(conn: sqlite3.Connection, source: str, item_id: str, alert_type: str, sent_at: str) -> None:
+def record_promo_alert(
+    conn: sqlite3.Connection,
+    source: str,
+    item_id: str,
+    alert_type: str,
+    sent_at: str,
+    title: str = "",
+    link: str = "",
+) -> None:
     conn.execute(
         """
-        INSERT OR IGNORE INTO promo_alerts_sent (source, item_id, alert_type, sent_at)
-        VALUES (?, ?, ?, ?)
+        INSERT OR IGNORE INTO promo_alerts_sent (source, item_id, alert_type, sent_at, title, link)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
-        (source, item_id, alert_type, sent_at),
+        (source, item_id, alert_type, sent_at, title, link),
     )
     conn.commit()

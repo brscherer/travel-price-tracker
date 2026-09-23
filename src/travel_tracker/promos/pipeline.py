@@ -42,6 +42,6 @@ def process_promo_item(
     sent_at = datetime.now(timezone.utc).isoformat()
     if alerter:
         alerter.send_promo_alert(label, item.title, item.link, item.source, note)
-    record_promo_alert(conn, item.source, item.item_id, alert_type, sent_at)
+    record_promo_alert(conn, item.source, item.item_id, alert_type, sent_at, title=item.title, link=item.link)
 
     return f"[{label}] {item.title} ({item.source})"

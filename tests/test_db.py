@@ -7,7 +7,9 @@ from travel_tracker.db.models import (
     get_or_create_route,
     get_price_history_brl,
     insert_snapshot,
+    promo_already_alerted,
     record_alert,
+    record_promo_alert,
 )
 
 
@@ -56,3 +58,23 @@ def test_last_alert_price_roundtrip():
     )
 
     assert get_last_alert_price(conn, route_id, "2026-12-01", "2026-12-10") == 750.0
+
+
+def test_promo_alert_stores_title_and_link():
+    conn = connect(":memory:")
+    assert promo_already_alerted(conn, "feed_a", "item-1") is False
+
+    record_promo_alert(
+        conn,
+        "feed_a",
+        "item-1",
+        "transfer_bonus",
+        datetime.now(timezone.utc).isoformat(),
+        title="100% bonus Livelo -> Smiles",
+        link="https://example.com/bonus",
+    )
+
+    assert promo_already_alerted(conn, "feed_a", "item-1") is True
+    row = conn.execute("SELECT title, link FROM promo_alerts_sent WHERE source = ? AND item_id = ?", ("feed_a", "item-1")).fetchone()
+    assert row["title"] == "100% bonus Livelo -> Smiles"
+    assert row["link"] == "https://example.com/bonus"
