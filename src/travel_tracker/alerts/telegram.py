@@ -12,8 +12,15 @@ log = logging.getLogger(__name__)
 _API_URL = "https://api.telegram.org/bot{token}/sendMessage"
 
 _PRIORITY_EMOJI = {
+    DealType.TARGET_PRICE: "\U0001f3af",  # target
     DealType.HOT_DEAL: "\U0001f525",  # fire
     DealType.ERROR_FARE: "\U0001f6a8",  # rotating light
+}
+
+_LABELS = {
+    DealType.TARGET_PRICE: "Under target price",
+    DealType.HOT_DEAL: "Hot deal",
+    DealType.ERROR_FARE: "ERROR FARE?",
 }
 
 
@@ -45,17 +52,18 @@ class TelegramAlerter:
         depart_date: str,
         return_date: str | None,
         price_brl: float,
-        discount_pct: float,
+        discount_pct: float | None,
         source: str,
         booking_link: str | None,
     ) -> None:
         emoji = _PRIORITY_EMOJI.get(deal_type, "")
-        label = "ERROR FARE?" if deal_type == DealType.ERROR_FARE else "Hot deal"
+        label = _LABELS.get(deal_type, "Deal")
         dates = f"{depart_date} -> {return_date}" if return_date else depart_date
+        price_note = f"{discount_pct:.0f}% below median" if discount_pct is not None else "within your target price"
         lines = [
             f"{emoji} <b>{label}</b>: {origin} -> {destination}",
             f"Dates: {dates}",
-            f"Price: R$ {price_brl:,.2f} ({discount_pct:.0f}% below median)",
+            f"Price: R$ {price_brl:,.2f} ({price_note})",
             f"Source: {source}",
         ]
         if booking_link:

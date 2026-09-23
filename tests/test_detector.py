@@ -74,3 +74,56 @@ def test_median_uses_full_history_not_just_recent():
     )
     assert result.median_brl == 1000.0
     assert result.deal_type == DealType.NONE
+
+
+def test_target_price_fires_without_enough_history():
+    result = evaluate_price(
+        price_brl=4000.0,
+        history_brl=[],  # no median possible yet
+        min_snapshots_for_median=10,
+        hot_deal_discount_pct=25,
+        error_fare_discount_pct=50,
+        max_price_brl=4500.0,
+    )
+    assert result.deal_type == DealType.TARGET_PRICE
+    assert result.median_brl is None
+    assert result.discount_pct is None
+
+
+def test_target_price_does_not_fire_above_cap():
+    result = evaluate_price(
+        price_brl=5000.0,
+        history_brl=[],
+        min_snapshots_for_median=10,
+        hot_deal_discount_pct=25,
+        error_fare_discount_pct=50,
+        max_price_brl=4500.0,
+    )
+    assert result.deal_type == DealType.NONE
+
+
+def test_median_deal_wins_over_target_price_when_more_severe():
+    history = [1000.0] * 10
+    result = evaluate_price(
+        price_brl=400.0,  # 60% below median -> error fare, also under cap
+        history_brl=history,
+        min_snapshots_for_median=10,
+        hot_deal_discount_pct=25,
+        error_fare_discount_pct=50,
+        max_price_brl=4500.0,
+    )
+    assert result.deal_type == DealType.ERROR_FARE
+
+
+def test_target_price_wins_when_price_not_below_median_threshold():
+    history = [1000.0] * 10
+    result = evaluate_price(
+        price_brl=900.0,  # only 10% below median -> not a median-based deal
+        history_brl=history,
+        min_snapshots_for_median=10,
+        hot_deal_discount_pct=25,
+        error_fare_discount_pct=50,
+        max_price_brl=950.0,  # but under the absolute cap
+    )
+    assert result.deal_type == DealType.TARGET_PRICE
+    assert result.median_brl == 1000.0

@@ -70,6 +70,7 @@ def run_scan(config: AppConfig | None = None, secrets: Secrets | None = None) ->
                 config.deal_detection.min_snapshots_for_median,
                 config.deal_detection.hot_deal_discount_pct,
                 config.deal_detection.error_fare_discount_pct,
+                max_price_brl=entry.max_price_brl,
             )
 
             if evaluation.deal_type == DealType.NONE:
@@ -87,7 +88,7 @@ def run_scan(config: AppConfig | None = None, secrets: Secrets | None = None) ->
                     depart_date=fare.depart_date,
                     return_date=fare.return_date,
                     price_brl=fare.price_brl,
-                    discount_pct=evaluation.discount_pct or 0.0,
+                    discount_pct=evaluation.discount_pct,
                     source=fare.source,
                     booking_link=fare.booking_link,
                 )
@@ -100,9 +101,12 @@ def run_scan(config: AppConfig | None = None, secrets: Secrets | None = None) ->
                 evaluation.deal_type.value,
                 fetched_at,
             )
+            discount_note = (
+                f"{evaluation.discount_pct:.0f}% below median" if evaluation.discount_pct is not None
+                else "within target price"
+            )
             summary_lines.append(
-                f"{fare.origin}->{fare.destination} {fare.depart_date}: R$ {fare.price_brl:,.2f} "
-                f"({evaluation.discount_pct:.0f}% below median)"
+                f"{fare.origin}->{fare.destination} {fare.depart_date}: R$ {fare.price_brl:,.2f} ({discount_note})"
             )
 
     if alerter and config.alerts.daily_summary and summary_lines:
