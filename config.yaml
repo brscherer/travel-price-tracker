@@ -52,6 +52,17 @@ deal_detection:
 scan:
   cadence_hours: 6
 
+wide_scan:
+  enabled: true
+  origin: POA
+  cabin: economy
+
+serpapi:
+  # Live re-check of possible error fares (>=50% below median) before
+  # alerting. Leave enabled but without SERPAPI_KEY set and it's a no-op --
+  # error fares still alert directly off cached Travelpayouts data.
+  enabled: true
+
 # Phase 3: award/miles programs (Smiles, LATAM Pass, Azul Fidelidade) and
 # transfer-bonus tracking (Livelo, Esfera) go here.
 miles_programs: []

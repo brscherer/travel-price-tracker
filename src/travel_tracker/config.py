@@ -35,6 +35,19 @@ class ScanConfig(BaseModel):
     cadence_hours: int = 6
 
 
+class WideScanConfig(BaseModel):
+    enabled: bool = True
+    origin: str = "POA"
+    cabin: str = "economy"
+
+
+class SerpApiConfig(BaseModel):
+    # Live re-check for possible error fares. Paid API with a limited free
+    # tier, so this only ever fires for ERROR_FARE-classified fares, not on
+    # every scan.
+    enabled: bool = True
+
+
 class AlertsConfig(BaseModel):
     telegram_enabled: bool = True
     daily_summary: bool = True
@@ -47,6 +60,8 @@ class AppConfig(BaseModel):
     watchlist: list[WatchlistEntry]
     deal_detection: DealDetectionConfig = DealDetectionConfig()
     scan: ScanConfig = ScanConfig()
+    wide_scan: WideScanConfig = WideScanConfig()
+    serpapi: SerpApiConfig = SerpApiConfig()
     miles_programs: list[dict] = []
     alerts: AlertsConfig = AlertsConfig()
 
@@ -56,6 +71,7 @@ class Secrets(BaseModel):
     travelpayouts_marker: str
     telegram_bot_token: str
     telegram_chat_id: str
+    serpapi_key: str = ""
     database_path: str = "data/tracker.db"
 
 
@@ -71,5 +87,6 @@ def load_secrets() -> Secrets:
         travelpayouts_marker=os.environ.get("TRAVELPAYOUTS_MARKER", ""),
         telegram_bot_token=os.environ.get("TELEGRAM_BOT_TOKEN", ""),
         telegram_chat_id=os.environ.get("TELEGRAM_CHAT_ID", ""),
+        serpapi_key=os.environ.get("SERPAPI_KEY", ""),
         database_path=os.environ.get("DATABASE_PATH") or "data/tracker.db",
     )

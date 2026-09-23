@@ -10,7 +10,8 @@ from .base import FareResult, Provider
 
 log = logging.getLogger(__name__)
 
-_BASE_URL = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates"
+_SEARCH_URL = "https://api.travelpayouts.com/aviasales/v3/prices_for_dates"
+_ANYWHERE_URL = "https://api.travelpayouts.com/v1/city-directions"
 
 
 class TravelpayoutsProvider(Provider):
@@ -18,8 +19,8 @@ class TravelpayoutsProvider(Provider):
 
     Docs: https://support.travelpayouts.com/hc/en-us/articles/203956163
     Not a live-pricing source -- results are cached by Travelpayouts and can
-    lag actual airline prices, which is why flagged deals get a live re-check
-    against SerpApi in a later phase.
+    lag actual airline prices, which is why flagged possible error fares get
+    a live re-check against SerpApi before alerting.
     """
 
     name = "travelpayouts"
@@ -34,8 +35,8 @@ class TravelpayoutsProvider(Provider):
         retry=retry_if_exception_type(requests.RequestException),
         reraise=True,
     )
-    def _fetch(self, params: dict) -> dict:
-        resp = requests.get(_BASE_URL, params=params, timeout=15)
+    def _get(self, url: str, params: dict) -> dict:
+        resp = requests.get(url, params=params, timeout=15)
         resp.raise_for_status()
         return resp.json()
 
@@ -60,7 +61,7 @@ class TravelpayoutsProvider(Provider):
             "marker": self.marker,
         }
         try:
-            payload = self._fetch(params)
+            payload = self._get(_SEARCH_URL, params)
         except requests.RequestException:
             log.exception("Travelpayouts request failed for %s-%s", origin, destination)
             return []
@@ -102,6 +103,53 @@ class TravelpayoutsProvider(Provider):
                     price_brl=price,
                     cabin=cabin,
                     source=self.name,
+                    booking_link=self._booking_link(item),
+                )
+            )
+        return results
+
+    def wide_scan(self, origin: str, cabin: str = "economy") -> list[FareResult]:
+        """'POA to anywhere' scan: cheapest cached fare per destination from
+        `origin`, across every destination Travelpayouts has cached data for.
+        One API call covers ~hundreds of destinations, which is what makes
+        this cheap enough to run alongside the per-route watchlist scan.
+        """
+        params = {"origin": origin, "currency": "brl", "token": self.token}
+        try:
+            payload = self._get(_ANYWHERE_URL, params)
+        except requests.RequestException:
+            log.exception("Travelpayouts wide scan request failed for origin=%s", origin)
+            return []
+
+        if not payload.get("success", False):
+            log.warning("Travelpayouts wide scan returned success=false for origin=%s: %s", origin, payload)
+            return []
+
+        data = payload.get("data", {})
+        entries = data.values() if isinstance(data, dict) else data
+
+        results: list[FareResult] = []
+        for item in entries:
+            destination = item.get("destination")
+            depart_at = item.get("departure_at")
+            if not destination or not depart_at:
+                continue
+            depart_date = datetime.fromisoformat(depart_at).date()
+            return_at = item.get("return_at")
+            return_date = datetime.fromisoformat(return_at).date() if return_at else None
+
+            price = float(item["price"])
+            results.append(
+                FareResult(
+                    origin=origin,
+                    destination=destination,
+                    depart_date=depart_date.isoformat(),
+                    return_date=return_date.isoformat() if return_date else None,
+                    price=price,
+                    currency="BRL",
+                    price_brl=price,
+                    cabin=cabin,
+                    source="travelpayouts_wide",
                     booking_link=self._booking_link(item),
                 )
             )

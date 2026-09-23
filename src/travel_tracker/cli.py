@@ -4,6 +4,12 @@ import logging
 import sys
 
 from .scan import run_scan
+from .wide_scan import run_wide_scan
+
+_COMMANDS = {
+    "scan": run_scan,
+    "wide-scan": run_wide_scan,
+}
 
 
 def main() -> None:
@@ -12,11 +18,11 @@ def main() -> None:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
-    if len(sys.argv) < 2 or sys.argv[1] != "scan":
-        print("Usage: python -m travel_tracker scan")
+    if len(sys.argv) < 2 or sys.argv[1] not in _COMMANDS:
+        print(f"Usage: python -m travel_tracker <{'|'.join(_COMMANDS)}>")
         sys.exit(1)
 
-    run_scan()
+    _COMMANDS[sys.argv[1]]()
 
 
 if __name__ == "__main__":
