@@ -35,3 +35,12 @@ CREATE TABLE IF NOT EXISTS alerts_sent (
 
 CREATE INDEX IF NOT EXISTS idx_alerts_route_date
     ON alerts_sent(route_id, depart_date, return_date);
+
+CREATE TABLE IF NOT EXISTS promo_alerts_sent (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source TEXT NOT NULL,
+    item_id TEXT NOT NULL,
+    alert_type TEXT NOT NULL,
+    sent_at TEXT NOT NULL,
+    UNIQUE(source, item_id)
+);

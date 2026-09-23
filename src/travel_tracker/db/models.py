@@ -112,3 +112,22 @@ def record_alert(
         (route_id, depart_date, return_date, price_brl, alert_type, sent_at),
     )
     conn.commit()
+
+
+def promo_already_alerted(conn: sqlite3.Connection, source: str, item_id: str) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM promo_alerts_sent WHERE source = ? AND item_id = ?",
+        (source, item_id),
+    ).fetchone()
+    return row is not None
+
+
+def record_promo_alert(conn: sqlite3.Connection, source: str, item_id: str, alert_type: str, sent_at: str) -> None:
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO promo_alerts_sent (source, item_id, alert_type, sent_at)
+        VALUES (?, ?, ?, ?)
+        """,
+        (source, item_id, alert_type, sent_at),
+    )
+    conn.commit()

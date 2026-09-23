@@ -54,6 +54,28 @@ class AlertsConfig(BaseModel):
     daily_summary_time: str = "08:00"
 
 
+class RssFeedConfig(BaseModel):
+    name: str
+    url: str
+
+
+class TelegramChannelsConfig(BaseModel):
+    # Off by default -- needs a one-time interactive Telethon login (see
+    # telegram_channels/login.py) before it can do anything.
+    enabled: bool = False
+    session_name: str = "travel_tracker"
+    channels: list[str] = []
+    keywords: list[str] = []
+
+
+class PromosConfig(BaseModel):
+    enabled: bool = True
+    keywords: list[str] = []
+    transfer_bonus_min_pct: float = 80.0
+    rss_feeds: list[RssFeedConfig] = []
+    telegram_channels: TelegramChannelsConfig = TelegramChannelsConfig()
+
+
 class AppConfig(BaseModel):
     timezone: str = "America/Sao_Paulo"
     currency: str = "BRL"
@@ -62,6 +84,7 @@ class AppConfig(BaseModel):
     scan: ScanConfig = ScanConfig()
     wide_scan: WideScanConfig = WideScanConfig()
     serpapi: SerpApiConfig = SerpApiConfig()
+    promos: PromosConfig = PromosConfig()
     miles_programs: list[dict] = []
     alerts: AlertsConfig = AlertsConfig()
 
@@ -72,6 +95,8 @@ class Secrets(BaseModel):
     telegram_bot_token: str
     telegram_chat_id: str
     serpapi_key: str = ""
+    telegram_api_id: str = ""
+    telegram_api_hash: str = ""
     database_path: str = "data/tracker.db"
 
 
@@ -88,5 +113,7 @@ def load_secrets() -> Secrets:
         telegram_bot_token=os.environ.get("TELEGRAM_BOT_TOKEN", ""),
         telegram_chat_id=os.environ.get("TELEGRAM_CHAT_ID", ""),
         serpapi_key=os.environ.get("SERPAPI_KEY", ""),
+        telegram_api_id=os.environ.get("TELEGRAM_API_ID", ""),
+        telegram_api_hash=os.environ.get("TELEGRAM_API_HASH", ""),
         database_path=os.environ.get("DATABASE_PATH") or "data/tracker.db",
     )

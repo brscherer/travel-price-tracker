@@ -1,0 +1,35 @@
+name: Promo feed scan
+
+on:
+  schedule:
+    # every 2 hours -- deal blogs post frequently, this is the cheapest scan
+    - cron: "15 */2 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  promo-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e .
+
+      - name: Restore database
+        uses: actions/cache@v4
+        with:
+          path: data/tracker.db
+          key: tracker-db-${{ github.run_id }}
+          restore-keys: tracker-db-
+
+      - name: Run promo scan
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m travel_tracker promo-scan

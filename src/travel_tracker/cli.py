@@ -3,12 +3,14 @@ from __future__ import annotations
 import logging
 import sys
 
+from .promo_scan import run_promo_scan
 from .scan import run_scan
 from .wide_scan import run_wide_scan
 
 _COMMANDS = {
     "scan": run_scan,
     "wide-scan": run_wide_scan,
+    "promo-scan": run_promo_scan,
 }
 
 

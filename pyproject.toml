@@ -13,12 +13,16 @@ dependencies = [
     "python-dotenv>=1.0",
     "pydantic>=2.6",
     "tenacity>=8.2",
+    "feedparser>=6.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
     "freezegun>=1.4",
+]
+telegram = [
+    "telethon>=1.36",
 ]
 
 [tool.hatch.build.targets.wheel]

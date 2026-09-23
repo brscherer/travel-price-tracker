@@ -63,8 +63,44 @@ serpapi:
   # error fares still alert directly off cached Travelpayouts data.
   enabled: true
 
-# Phase 3: award/miles programs (Smiles, LATAM Pass, Azul Fidelidade) and
-# transfer-bonus tracking (Livelo, Esfera) go here.
+promos:
+  enabled: true
+  # General relevance filter for RSS/channel items: alerts if any of these
+  # appear in the title/summary, in addition to the transfer-bonus and
+  # miles-sale rules below (which fire regardless of these keywords).
+  keywords:
+    - "Porto Alegre"
+    - "POA"
+    - Smiles
+    - "LATAM Pass"
+    - "Azul Fidelidade"
+    - Livelo
+    - Esfera
+  transfer_bonus_min_pct: 80
+  rss_feeds:
+    - name: melhores_destinos
+      url: "https://www.melhoresdestinos.com.br/feed"
+    - name: pontos_pra_voar
+      url: "https://pontospravoar.com/feed/"
+    - name: passagens_imperdiveis
+      url: "https://passagensimperdiveis.com.br/feed/"
+      # Blocked by Cloudflare bot-protection as of 2026-09 even from a
+      # regular browser -- left configured since that may change, but the
+      # scan logs a warning and skips it rather than failing the run.
+  telegram_channels:
+    # Needs a one-time interactive login first --
+    # see telegram_channels/login.py. Off until you've done that and
+    # picked channels to follow.
+    enabled: false
+    session_name: travel_tracker
+    channels: []
+    keywords:
+      - "Porto Alegre"
+      - "POA"
+
+# Phase 3 (deferred): seats.aero award tracking needs a seats.aero Pro
+# subscription (~R$50/mo) for an API key -- not wired in yet. Revisit once
+# that's decided; the Provider interface makes it a self-contained addition.
 miles_programs: []
 
 alerts:

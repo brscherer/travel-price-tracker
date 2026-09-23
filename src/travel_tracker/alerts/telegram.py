@@ -70,6 +70,15 @@ class TelegramAlerter:
             lines.append(booking_link)
         self.send("\n".join(lines))
 
+    def send_promo_alert(self, label: str, title: str, link: str, source: str, note: str | None = None) -> None:
+        lines = [f"\U0001f4e2 <b>{label}</b>", title]
+        if note:
+            lines.append(note)
+        lines.append(f"Source: {source}")
+        if link:
+            lines.append(link)
+        self.send("\n".join(lines))
+
     def send_daily_summary(self, lines: list[str]) -> None:
         if not lines:
             self.send("Daily summary: no deals today.")
